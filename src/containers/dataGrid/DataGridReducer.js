@@ -3,6 +3,7 @@ import { dataGridActions } from "./DataGridActions";
 export const dataGridInitialValues = {
   rows: [],
   columns: [],
+  history: [],
 };
 
 export function dataGridReducer(state, { type, payload }) {
@@ -19,6 +20,13 @@ export function dataGridReducer(state, { type, payload }) {
         ...state,
         rows: payload.newRows,
       };
+    }
+
+    case dataGridActions.setHistory: {
+      return {
+        ...state,
+        history: payload.newHistory,
+      }
     }
 
     default: {

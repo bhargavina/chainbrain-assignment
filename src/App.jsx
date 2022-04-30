@@ -2,6 +2,9 @@ import { useEffect, useReducer, useState } from "react";
 import {
   alpha,
   Drawer,
+  DrawerHeader,
+  Icon,
+  IconButton,
   makeStyles,
   Paper,
   ThemeProvider,
@@ -25,6 +28,8 @@ import {
 } from "./containers/dataGrid/DataGridReducer";
 import { dataGridActions } from "./containers/dataGrid/DataGridActions";
 import EditableCell from "./containers/dataGrid/EditableCell";
+import DrawerContent from "./containers/dataGrid/DrawerContent";
+import { formatHistory, getDefaultHistory } from "./helpers/HistoryHelper";
 
 const useStyles = makeStyles((theme) => ({
   container: {
@@ -93,6 +98,10 @@ const useStyles = makeStyles((theme) => ({
     //   background: `${alpha(colors.blue, 0.8)}`,
     // },
   },
+  drawerPaper: {
+    width: '31.25rem',
+  },
+
 }));
 
 function App() {
@@ -100,7 +109,7 @@ function App() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   const [state, dispatch] = useReducer(dataGridReducer, dataGridInitialValues);
-  const { rows, columns } = state;
+  const { rows, columns, history } = state;
 
   const classes = useStyles();
 
@@ -114,7 +123,6 @@ function App() {
     } else {
       let parsedColumns = JSON.parse(localStorageColumns);
       const formattedColumns = formatColumns(parsedColumns, EditableCell);
-      // console.log("columns with other options: ", formattedColumns);
       dispatch({
         type: dataGridActions.setColumns,
         payload: {
@@ -134,6 +142,21 @@ function App() {
         type: dataGridActions.setRows,
         payload: {
           newRows: JSON.parse(localStorageRows),
+        },
+      });
+    }
+
+    const localStorageHistory = localStorage.getItem(localStorageKeys.history);
+    if (!localStorageHistory) {
+      localStorage.setItem(
+        localStorageKeys.history,
+        JSON.stringify(getDefaultHistory())
+      );
+    } else {
+      dispatch({
+        type: dataGridActions.setHistory,
+        payload: {
+          newHistory: JSON.parse(localStorageHistory),
         },
       });
     }
@@ -206,8 +229,9 @@ function App() {
           anchor="right"
           open={isDrawerOpen}
           onClose={() => setIsDrawerOpen(false)}
+          classes={{ paper: classes.drawerPaper }}
         >
-          FUN FUN FUN DRAWER
+          <DrawerContent onCloseIconClick={() => setIsDrawerOpen(false)} historyItems={formatHistory(history)} />
         </Drawer>
       </main>
     </ThemeProvider>

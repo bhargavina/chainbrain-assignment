@@ -5,4 +5,11 @@ export const formLabels = {
 export const localStorageKeys = {
   columns: "COLUMNS",
   rows: "ROWS",
+  history: "HISTORY",
+};
+
+export const historyActions = {
+  add: "ADD",
+  delete: "DELETE",
+  modify: "MODIFY",
 };
