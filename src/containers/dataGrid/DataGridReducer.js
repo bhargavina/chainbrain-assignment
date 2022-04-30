@@ -4,6 +4,7 @@ export const dataGridInitialValues = {
   rows: [],
   columns: [],
   history: [],
+  filteredColumns: [],
 };
 
 export function dataGridReducer(state, { type, payload }) {
@@ -12,6 +13,14 @@ export function dataGridReducer(state, { type, payload }) {
       return {
         ...state,
         columns: payload.newColumns,
+        filteredColumns: payload.newColumns,
+      };
+    }
+
+    case dataGridActions.setFilteredColumns: {
+      return {
+        ...state,
+        filteredColumns: payload.newColumns,
       };
     }
 
@@ -26,7 +35,15 @@ export function dataGridReducer(state, { type, payload }) {
       return {
         ...state,
         history: payload.newHistory,
-      }
+      };
+    }
+
+    case dataGridActions.onRowsChange: {
+      return {
+        ...state,
+        history: payload.newHistory,
+        rows: payload.newRows,
+      };
     }
 
     default: {

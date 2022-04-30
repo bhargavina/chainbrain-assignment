@@ -104,7 +104,9 @@ function getMonthName(monthNum) {
 function formatTime(time) {
   const hours = new Date(time).getHours();
   const minutes = new Date(time).getMinutes();
-  return `${hours}:${minutes}`;
+  return `${hours > 9 ? hours : `0${hours}`}:${
+    minutes > 9 ? minutes : `0${minutes}`
+  }`;
 }
 
 function formatEventAction(action, colNum, rowNum) {
@@ -138,7 +140,6 @@ function getHeadingFromDate(date) {
   const todayDateStart = new Date();
   const secondsDiff = todayDateStart - date;
   const daysDiff = Math.round(Math.abs(secondsDiff) / (1000 * 60 * 60 * 24));
-  console.log("daysDiff: ", daysDiff);
   let heading = "";
   if (daysDiff === 1) {
     heading = `${messages["Drawer.date.yesterday"]} (${getDateLongFormat(
@@ -149,21 +150,18 @@ function getHeadingFromDate(date) {
   } else {
     heading = `${getDateLongFormat(date)}`;
   }
-  console.log("heading: ", heading);
   return heading;
 }
 
 export function formatHistory(items) {
   const groupedByDate = _.groupBy(items, (item) => item.date);
-  console.log("groupedByDate: ", groupedByDate, typeof groupedByDate);
   const formattedItems = Object.keys(groupedByDate).map((group) => ({
     heading: getHeadingFromDate(new Date(group)),
-    events: groupedByDate[group].map((e) => ({
+    events: groupedByDate[group].sort((a, b) => new Date(b.time).valueOf() - new Date(a.time).valueOf()).map((e) => ({
       ...e,
       formattedTime: formatTime(e.time),
       formattedString: formatEventAction(e.action, e.columnNum, e.rowNum),
     })),
   }));
-  console.log("formattedItems: ", formattedItems);
   return formattedItems;
 }

@@ -10,7 +10,7 @@ export function getDefaultColumns() {
   ];
 }
 
-export function formatColumns(columns, EditableCell) {
+export function formatColumns(columns) {
   const formattedColumns = columns.map((item) => {
     if (item.key === "id") {
       return {
@@ -23,7 +23,6 @@ export function formatColumns(columns, EditableCell) {
     return {
       ...item,
       editor: TextEditor,
-      // editor: (props) => <EditableCell {...props} />,
       editorOptions: {
         editOnClick: true,
       },

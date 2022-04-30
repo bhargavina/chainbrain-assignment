@@ -2,9 +2,6 @@ import { useEffect, useReducer, useState } from "react";
 import {
   alpha,
   Drawer,
-  DrawerHeader,
-  Icon,
-  IconButton,
   makeStyles,
   Paper,
   ThemeProvider,
@@ -19,7 +16,7 @@ import SearchField from "./components/searchField/SearchField";
 import Button from "./components/button/Button";
 import DataGrid from "react-data-grid";
 import { ReactComponent as HistoryIcon } from "./assets/images/clockIcon.svg";
-import { localStorageKeys } from "./constants/Constants";
+import { historyActions, localStorageKeys } from "./constants/Constants";
 import { formatColumns, getDefaultColumns } from "./helpers/ColumnsHelper";
 import { getDefaultRows } from "./helpers/RowsHelper";
 import {
@@ -27,9 +24,8 @@ import {
   dataGridReducer,
 } from "./containers/dataGrid/DataGridReducer";
 import { dataGridActions } from "./containers/dataGrid/DataGridActions";
-import EditableCell from "./containers/dataGrid/EditableCell";
 import DrawerContent from "./containers/dataGrid/DrawerContent";
-import { formatHistory, getDefaultHistory } from "./helpers/HistoryHelper";
+import { formatHistory } from "./helpers/HistoryHelper";
 
 const useStyles = makeStyles((theme) => ({
   container: {
@@ -99,9 +95,8 @@ const useStyles = makeStyles((theme) => ({
     // },
   },
   drawerPaper: {
-    width: '31.25rem',
+    width: "31.25rem",
   },
-
 }));
 
 function App() {
@@ -109,7 +104,7 @@ function App() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   const [state, dispatch] = useReducer(dataGridReducer, dataGridInitialValues);
-  const { rows, columns, history } = state;
+  const { rows, columns, filteredColumns, history } = state;
 
   const classes = useStyles();
 
@@ -122,7 +117,7 @@ function App() {
       );
     } else {
       let parsedColumns = JSON.parse(localStorageColumns);
-      const formattedColumns = formatColumns(parsedColumns, EditableCell);
+      const formattedColumns = formatColumns(parsedColumns);
       dispatch({
         type: dataGridActions.setColumns,
         payload: {
@@ -150,7 +145,12 @@ function App() {
     if (!localStorageHistory) {
       localStorage.setItem(
         localStorageKeys.history,
-        JSON.stringify(getDefaultHistory())
+        // JSON.stringify(
+        //   getDefaultHistory().sort(
+        //     (a, b) => new Date(b.time).valueOf() - new Date(a.time).valueOf()
+        //   )
+        // )
+        JSON.stringify([])
       );
     } else {
       dispatch({
@@ -164,19 +164,59 @@ function App() {
 
   function handleSearchTextChange(event) {
     const newValue = event.target.value;
-    console.log("newValue: ", newValue);
     setSearchText(newValue);
+    if (newValue === "") {
+      dispatch({
+        type: dataGridActions.setFilteredColumns,
+        payload: {
+          newColumns: columns.map((column) => ({ ...column })),
+        },
+      });
+    } else {
+      dispatch({
+        type: dataGridActions.setFilteredColumns,
+        payload: {
+          newColumns: columns.filter((column) =>
+            column.name.toLowerCase().includes(newValue.toLowerCase())
+          ),
+        },
+      });
+    }
   }
 
-  function handleRowsChange(changedRows) {
-    console.log("called");
+  function handleRowsChange(updatedRows, updatedRowsIndices) {
+    const changedHistory = history.map((item) => ({ ...item }));
+    const newItem = {
+      id: changedHistory.length + 1,
+      action: historyActions.modify,
+      columnNum: updatedRowsIndices.column.idx + 1,
+      rowNum: updatedRowsIndices.indexes[0] + 1,
+      date: (function () {
+        const date = new Date();
+        date.setHours(23);
+        date.setMinutes(59);
+        date.setSeconds(59);
+        date.setMilliseconds(59);
+        return new Date(date);
+      })(),
+      time: new Date(),
+    };
+    changedHistory.push(newItem);
+    changedHistory.sort(
+      (a, b) => new Date(b.time).valueOf() - new Date(a.time).valueOf()
+    );
     dispatch({
-      type: dataGridActions.setRows,
+      type: dataGridActions.onRowsChange,
       payload: {
-        newRows: changedRows,
+        newRows: updatedRows,
+        newHistory: JSON.parse(JSON.stringify(changedHistory)),
       },
     });
-    localStorage.setItem(localStorageKeys.rows, JSON.stringify(changedRows));
+    localStorage.setItem(localStorageKeys.rows, JSON.stringify(updatedRows));
+    localStorage.setItem(
+      localStorageKeys.history,
+      JSON.stringify(changedHistory)
+    );
   }
 
   return (
@@ -218,7 +258,7 @@ function App() {
           </div>
           <div className={classes.dataGridContainer}>
             <DataGrid
-              columns={columns}
+              columns={filteredColumns}
               rows={rows}
               className="rdg-light"
               onRowsChange={handleRowsChange}
@@ -231,7 +271,10 @@ function App() {
           onClose={() => setIsDrawerOpen(false)}
           classes={{ paper: classes.drawerPaper }}
         >
-          <DrawerContent onCloseIconClick={() => setIsDrawerOpen(false)} historyItems={formatHistory(history)} />
+          <DrawerContent
+            onCloseIconClick={() => setIsDrawerOpen(false)}
+            historyItems={formatHistory(history)}
+          />
         </Drawer>
       </main>
     </ThemeProvider>

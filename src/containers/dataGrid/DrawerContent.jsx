@@ -132,7 +132,7 @@ function DrawerContent(props) {
                   <div key={event.id} className={classes.eventContainer}>
                     <div>
                       <Typography
-                        variant="subtitle"
+                        variant="subtitle1"
                         classes={{ root: classes.actionDescription }}
                       >
                         {event.formattedString}
@@ -140,7 +140,7 @@ function DrawerContent(props) {
                     </div>
                     <div className={classes.timeContainer}>
                       <Typography
-                        variant="subtitle"
+                        variant="subtitle1"
                         classes={{ root: classes.actionDescription }}
                       >
                         {event.formattedTime}
